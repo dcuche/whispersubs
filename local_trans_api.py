@@ -1,9 +1,9 @@
 import os
 import time
+import subprocess
 from pathlib import Path
 
 from openai import OpenAI
-from pydub import AudioSegment
 
 from video_funcs import extract_audio_from_video, format_time
 
@@ -27,6 +27,25 @@ MAX_CHARS_PER_SUBTITLE = 130
 client = OpenAI()  # Requires OPENAI_API_KEY env var
 
 
+def get_audio_length(file_path: str) -> float:
+    """Return the duration of an audio file in seconds using ffprobe."""
+    cmd = [
+        "ffprobe",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        file_path,
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        return float(result.stdout.strip())
+    except (ValueError, AttributeError):
+        return 0.0
+
+
 def transcribe_audio_api(file_path: str, model_name: str, lang: str) -> dict:
     """Send the file to the OpenAI API and return the verbose JSON result."""
     with open(file_path, "rb") as f:
@@ -46,8 +65,7 @@ def transcribe_audio_api(file_path: str, model_name: str, lang: str) -> dict:
 
 def save_transcription(result: dict, file_path: str, model_name: str, lang: str) -> None:
     base = Path(file_path).stem
-    audio = AudioSegment.from_file(file_path)
-    length = len(audio) / 1000
+    length = get_audio_length(file_path)
     info = (
         f"Model: {model_name}\n"
         f"Processing Time: {result['processing_time']} seconds\n"
