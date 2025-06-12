@@ -1,6 +1,6 @@
 import os
-import time
 import subprocess
+import time
 from pathlib import Path
 
 from openai import OpenAI
@@ -63,7 +63,9 @@ def transcribe_audio_api(file_path: str, model_name: str, lang: str) -> dict:
     return result
 
 
-def save_transcription(result: dict, file_path: str, model_name: str, lang: str) -> None:
+def save_transcription(
+    result: dict, file_path: str, model_name: str, lang: str
+) -> None:
     base = Path(file_path).stem
     length = get_audio_length(file_path)
     info = (
@@ -120,7 +122,9 @@ def save_srt(result: dict, file_path: str, model_name: str, lang: str) -> None:
                 if len(current) + len(word) + 1 > MAX_CHARS_PER_SUBTITLE:
                     end_sub = word_info["start"]
                     srt_file.write(f"{subtitle_index}\n")
-                    srt_file.write(f"{format_time(start_sub)} --> {format_time(end_sub)}\n")
+                    srt_file.write(
+                        f"{format_time(start_sub)} --> {format_time(end_sub)}\n"
+                    )
                     srt_file.write(f"{current.strip()}\n\n")
                     subtitle_index += 1
                     current = word + " "
@@ -148,7 +152,9 @@ if __name__ == "__main__":
         Path(srt_dir).mkdir(parents=True, exist_ok=True)
 
     for model_name in models:
-        source_dir = video_dir if video_dir and os.path.exists(video_dir) else audios_dir
+        source_dir = (
+            video_dir if video_dir and os.path.exists(video_dir) else audios_dir
+        )
         file_ext = video_format if source_dir == video_dir else audio_format
         for file in os.listdir(source_dir):
             if file.endswith(file_ext):
